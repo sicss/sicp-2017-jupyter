@@ -1,0 +1,138 @@
+#lang racket
+
+; 2.1  Introduction to Data Abstraction
+
+; ================================================================================================= Ex 2.1 : DONE
+
+; == PAIR layer ==
+
+(define (Make-rat n d)
+  (let ((g (gcd n d)))
+        (if (or (and (< n 0) (< d 0))
+                (and (> n 0) (> d 0)))
+            (cons (/ n g) (/ d g))
+            (cons (- (/ n g)) (abs (/ d g))))))
+
+(define (print-rat x)
+  (newline)
+  (display (numer x))
+  (display "/")
+  (display (denom x)))
+
+(define (numer x)
+  (car x))
+
+(define (denom x)
+  (cdr x))
+
+; == RATIONAL NUMBER layer ==
+
+; ================================================================================================= Ex 2.2 : DONE
+
+; == PAIR layer ==
+
+(define (make-point x y)
+  (cons x y))
+
+(define (x-point p)
+  (car p))
+
+(define (y-point p)
+  (cdr p))
+
+(define (midpoint-segment segment)
+  (make-point (average (x-point (start-segment segment))
+                       (x-point (end-segment segment)))
+              (average (y-point (start-segment segment))
+                       (y-point (end-segment segment)))))
+
+(define (average s t)
+  (/ (+ s t) 2))
+
+(define (print-point p)
+  (newline)
+  (display "(")
+  (display (x-point p))
+  (display ",")
+  (display (y-point p))
+  (display ")"))
+
+; == POINT layer ==
+
+(define (make-segment p1 p2)
+  (cons p1 p2))
+
+(define (start-segment segment)
+  (car segment))
+
+(define (end-segment segment)
+  (cdr segment))
+
+; == SEGMENT layer ==
+
+; ================================================================================================= Ex 2.3 : DONE
+
+(define (make-rectangle lower-left width height)
+  (list lower-left width height))
+
+(define (lower-left rectangle)
+  (car rectangle))
+
+(define (width rectangle)
+  (cadr rectangle))
+
+(define (height rectangle)
+  (caddr rectangle))
+
+(define (perimeter rectangle)
+  (+ (* 2 (width  rectangle))
+     (* 2 (height rectangle))))
+
+(define (area rectangle)
+  (* (width  rectangle)
+     (height rectangle)))
+
+; == RECTANGLE layer ==
+
+; ================================================================================================= Ex 2.4 : DONE
+
+(define (new-cons x y)
+  (λ (m) (m x y)))
+
+(define (new-car z)
+  (z (λ (p q) p)))
+
+(define (new-cdr z)
+  (z (λ (p q) q)))
+
+#|
+(new-car (new-cons 3 4))
+(new-car (λ (m) (m 3 4)))
+((λ (m) (m 3 4)) (λ (p q) p))
+((λ (p q) p) 3 4)
+3
+  car: contract violation
+  expected: pair?
+  given: #<procedure:...haruyama/sec-2-1:100:2>
+|#
+
+; ================================================================================================= Ex 2.5 : DONE
+
+(define (exp base x)
+  (if (= x 0)
+   1
+   (* base (exp base (- x 1)))))
+
+(define (new-cons2 a b)
+  (* (exp 2 a)
+     (exp 3 b)))
+
+(define (new-car2 z)
+  (if (= 0 (modulo z 2))
+      (+ 1 (new-car2 (/ z 2)))
+      0))
+
+(define (new-cdr2 z)
+  (if (= 0 (modulo z 3))
+      (+ 1 (new-cdr2 (/ z 3)))
+      0))

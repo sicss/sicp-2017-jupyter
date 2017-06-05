@@ -1,0 +1,30 @@
+#lang racket
+
+; 1.3  Formulating Abstractions with Higher-Order Procedures
+
+; ================================================================================================= Ex 1.29
+(define (sum term a next b)
+  (if (> a b)
+      0
+      (+ (term a)
+         (sum term (next a) next b))))
+
+(define (simpson-integral f a b n)
+  (let ((h (λ (a b n) (/ (- b a) n))))
+    (let ((y (λ (index) (f (+ a
+                                  (* index
+                                     (h a b n)))))))
+      (let ((simpson-term (λ (index)
+                              (cond ((= index 0)   (y 0))
+                                    ((= index n)   (y n))
+                                    ((odd?  index) (* 4 (y index)))
+                                    ((even? index) (* 2 (y index)))))))
+        (* (/ (h a b n) 3)
+             (sum simpson-term a simpson-next b))))))
+
+(define (simpson-next a)
+  (+ a 1))
+
+(define (cube x)
+  (* x x x))
+

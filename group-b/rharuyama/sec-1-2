@@ -1,0 +1,193 @@
+#lang racket
+
+; sicp-2017-03
+; 1.2 Procedures and the Processes They Generate
+
+; ================================================================================================= Ex 1.9 
+#|
+=RECURSIVE=
+(+ 4 5)
+(if (= a b)
+    b
+    (inc (+ (dec a) b)))
+(if (= 4 5)
+    5
+    (inc (+ (dec 4) 5)))
+(inc (+ (dec 4) 5))
+(inc (+ 3 5))
+(inc (inc (+ 2 5)))
+(inc (inc (inc (+ 1 5))))
+(inc (inc (inc (inc (+ 0 5)))))
+(inc (inc (inc (inc 5))))
+(inc (inc (inc 6)))
+(inc (inc 7))
+(inc 8)
+9
+
+=ITERATIVE=
+(+ 4 5)
+(+ (dec 4) (inc 5))
+(+ 3 6)
+(+ (dec 3) (inc 6))
+(+ 2 7)
+(+ (dec 2) (inc 7))
+(+ 1 8)
+(+ (dec 1) (inc 8))
+(+ 0 9)
+9
+|#
+
+; ================================================================================================= Ex 1.5 
+#|
+<Case : applicative-order>
+(test 0 (p))
+(if (= 0 0) 0 (p))
+(if #t 0 (p))
+0
+
+<Case : normal-order>
+(test 0 (p))
+(if (= 0 0) 0 (p))
+...does not halt.
+
+|#
+
+(define (p) (p))
+(define (test x y)
+  (if (= x 0)
+      0
+      y))
+
+; ================================================================================================ Ex 1.10
+
+(define (A x y)
+  (cond ((= y 0) 0)
+        ((= x 0) (* 2 y))
+        ((= y 1) 2)
+        (else (A (- x 1)
+                 (A x (- y 1))))))
+
+(define (concise func)
+  (cond ((=number? (second-arity func) 0) 0)
+        ((=number? (first-arity  func) 0) (make-product 2 (second-arity func)))
+        ((=number? (second-arity func) 1) 2)
+        (else ((car func) (make-minous (first-arity func) 1)
+                          ((car func) (second-arity func) (make-minous (second-arity func) 1))))))
+
+(define (=number? exp num)
+  (and (number? exp) (= exp num)))
+
+(define (make-product m1 m2)
+  (cond ((or (=number? m1 0) (=number? m2 0)) 0)
+        ((=number? m1 1) m2)
+        ((=number? m2 1) m1)
+        ((and (number? m1) (number? m2)) (* m1 m2))
+        (else (list '* m1 m2))))
+
+(define (make-minous m1 m2)
+  (cond ((and (number? m1) (number? m2)) (- m1 m2))
+        (else (list '- m1 m2))))
+
+(define (first-arity func)
+  (cond ((number? (cadr func)) (cadr func))
+        (else '(cadr func))))
+
+(define (second-arity func)
+  (cond ((number? (caddr func)) (caddr func))
+        (else '(caddr func))))
+
+; (f n) = (*   2 n)
+; (g n) = (**  2 n)
+; (h n) = (*** 2 n)
+
+; =================================================================================================  Ex 1.11
+;<recursive>
+(define (f-rec n)
+  (if (< n 3)
+      n
+      (+ (f-rec (- n 1))
+         (* 2 (f-rec (- n 2)))
+         (* 3 (f-rec (- n 3))))))
+
+;<iterative> state variables, update, terminate test.
+(define (f-iter n f0 f1 f2)
+  (if (< n 3)
+      f2
+      (f-iter (- n 1)
+              f1
+              f2
+              (+ f2
+                 (* 2 f1)
+                 (* 3 f0)))))
+
+(define (f n)
+  (f-iter n 0 1 2))
+
+; ================================================================================================= Ex 1.12
+
+(define (a i j)
+  (cond ((and (= i 0) (= j 0)) 1)
+        ((and (= i 0) (not (= j 0))) 0)
+        ((and (not (= i 0)) (= j 0)) 1)
+        ((and (not (= i 0)) (not (= j 0))) (+ (a (- i 1) (- j 1))
+                                              (a (- i 1) j)))))
+
+(define (make-list i maxi)
+  (if (= i maxi)
+      (cons (a maxi maxi) '())
+      (cons (a maxi i) (make-list (+ i 1) maxi))))
+
+(define (pascal-list n)
+  (make-list 0 n))
+
+; ================================================================================================= Ex 1.13
+
+
+
+; ================================================================================================= Ex 1.20
+#|
+If operator is primitive and operands are primitive,
+then apply operator to operands.
+If operator is primitive and operands are not primitive,
+then evaluate operands.
+If operator is not primitive and operands are primitive,
+then evaluate operator.
+If operator is not primitive and operands ore not primitive,
+then evaluate operator and operands simoltaniously.
+
+When apply?
+-(applicative-order)
+  If at least one combination in process is consist of primitive operator and operands,
+  apply it's operator to operands.
+-(normal-order ; fully expand)
+  If all combinations in process is consist of primitive operator and operands,
+  apply it's operator to operands.
+
+<normal-order case>
+(gcd 206 40)
+(if (= 40 0) 206 (gcd 40 (remainder 206 40)))
+   (gcd 40 (remainder 206 40))
+== (if (= (remainder 206 40) 0) 40 (gcd (remainder 206 40) (remainder 40 (remainder 206 40))))
+   (gcd (remainder 206 40) (remainder 40 (remainder 206 40)))
+== (if (= (remainder 40 (remainder 206 40)) 0) (remainder 206 40) (gcd (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))
+   (gcd (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40))))
+== ...
+There is not any "remainder" that might be evaluated because condition of "if" cannot be primitive since it cantains remainder.
+
+<applicative-order case>
+(gcd 206 40)
+(if (= 40 0) 206 (gcd 40 (remainder 206 40)))
+(if #f 206 (gcd 40 6))
+(gcd 40 6)
+(if (= 6 0) 40 (gcd 6 (remainder 40 6)))
+(gcd 6 4)
+(if (= 4 0) 6 (gcd 4 (rameinder 6 4)))
+(gcd 4 2)
+(if (= 2 0) 4 (gcd 2 (remainder 4 2)))
+(gcd 2 0)
+(if (= 0 0) 2 (gcd 0 (remainder 2 0)))
+(if #t 2 (gcd 0 (remainder 2 0)))
+2
+
+|#
+
